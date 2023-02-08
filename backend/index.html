@@ -13,8 +13,8 @@
     <ul id="messages"></ul>
     <script>
       var client_id = Date.now();
-      document.querySelector("#ws-id").textContent = client_id;
-      var ws = new WebSocket(`ws://localhost:8000/ws`);
+      var roomID = "test";
+      var ws = new WebSocket(`ws://localhost:8000/ws/${roomID}`);
       ws.onmessage = function (event) {
         var messages = document.getElementById("messages");
         var message = document.createElement("li");

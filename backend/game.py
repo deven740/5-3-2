@@ -20,11 +20,9 @@ class Deck:
     
 
     def _shuffle(full_deck):
-        return shuffle(full_deck)
+        return full_deck
+        return shuffle(list(full_deck))
 
-    
-a = Deck()
-print(a.create_deck())
 
 
 class Player:
@@ -33,11 +31,10 @@ class Player:
         self.websocket = websocket
         self.cards = set()
 
-player1 = Player()
-
 class Game:
     def __init__(self) -> None:
-        self.deck = Deck.create_deck()
+        self.deck = Deck.create_deck()._shuffle()
+        
 
     
     def start(self):
@@ -46,5 +43,4 @@ class Game:
 
         
 
-print(Game().deck)
         
