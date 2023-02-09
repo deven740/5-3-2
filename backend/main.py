@@ -55,15 +55,23 @@ class Rooms:
     async def send_personal_message(self, cards: str, websocket: WebSocket):
         await websocket.send_text(cards)
 
-    async def broadcast(self, message: str, room_code: str, player_name: str):
+    async def broadcast(self, message: dict, room_code: str, player_name: str):
         print(player_name)
         for player in self.rooms[room_code]['players']:
             if self.rooms[room_code]['game']:
                 game = self.rooms[room_code]['game']
-                game = 'game started'
+                game.current_round.add(message['player_card'])
+                print(len(game.current_round))
+                # print(type(message), message)
+                event = {
+                    "type": "play",
+                    "player": player_name,
+                    "cardPlayer": message['player_card']
+                }
+                await player.websocket.send_text(json.dumps(event))
             else:
                 game = 'game not started'
-            await player.websocket.send_text({game})
+            # await player.websocket.send_text({game})
 
 
 rooms = Rooms()
@@ -75,6 +83,7 @@ async def websocket_endpoint(websocket: WebSocket, room_code: str, player_name: 
     try:
         while True:
             data = await websocket.receive_text()
+            data = json.loads(data)
             await rooms.broadcast(data, room_code, player_name)
     except WebSocketDisconnect:
         rooms.disconnect(websocket, room_code)

@@ -34,10 +34,11 @@ class Player:
     def __init__(self, name, websocket) -> None:
         self.name = name
         self.websocket = websocket
-        self.cards = set()
+        self.cards = {}
 
 class Game:
     deck = Deck.create_deck()
+    current_round = set()
     
     def __init__(self) -> None:
         pass
