@@ -3,7 +3,7 @@ from random import shuffle
 class Deck:
 
     suits = 'H D C S'.split()
-    ranks = '7 8 9 10 J Q K A'.split()
+    ranks = '7 8 9 0 J Q K A'.split()
 
     def __init__(self) -> None:
         pass
@@ -16,14 +16,19 @@ class Deck:
             for score, rank in enumerate(cls.ranks, 7):
                 full_deck[f'{rank}{suit}'] = {'score': score}
 
+        [full_deck.pop(key) for key in ['7D', '7C']]
+
         return full_deck
     
 
-    def _shuffle(full_deck):
-        return full_deck
-        return shuffle(list(full_deck))
-
-
+    @staticmethod
+    def shuffle_deck(deck):
+        deck_keys_list = list(deck.keys())
+        shuffle(deck_keys_list)
+        return deck_keys_list
+        # shuffled_cards = (shuffle(list(deck.keys())))
+        # shushuffle(list(deck.keys()))
+    
 
 class Player:
     def __init__(self, name, websocket) -> None:
@@ -32,8 +37,14 @@ class Player:
         self.cards = set()
 
 class Game:
+    deck = Deck.create_deck()
+    
     def __init__(self) -> None:
-        self.deck = Deck.create_deck()._shuffle()
+        pass
+
+    @classmethod
+    def shuffle_deck(cls):
+        return Deck.shuffle_deck(cls.deck)
         
 
     
