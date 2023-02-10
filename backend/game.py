@@ -38,7 +38,9 @@ class Player:
 
 class Game:
     deck = Deck.create_deck()
-    current_round = set()
+    current_round = {}
+    is_trump_set = None
+    round_start_suit = None
     
     def __init__(self) -> None:
         pass
@@ -46,6 +48,18 @@ class Game:
     @classmethod
     def shuffle_deck(cls):
         return Deck.shuffle_deck(cls.deck)
+
+    @classmethod  
+    def check_winner(cls):
+        round_winner = None
+        max_score = 0
+        for player in cls.current_round:
+            if cls.deck[cls.current_round[player]]['score'] > max_score:
+                max_score = max(max_score, cls.deck[cls.current_round[player]]['score'])
+                round_winner = player
+            print(player, cls.deck[cls.current_round[player]], cls.current_round[player], max_score)
+
+        return round_winner
         
 
     

@@ -42,16 +42,18 @@
         A: 14,
       };
 
-      var playerName = Date.now();
+      var playerName = Date.now().toString();
       var roomID = "test";
       const URL = `ws://localhost:8000/ws/${roomID}?player_name=${playerName}`;
       console.log(URL);
       var ws = new WebSocket(URL);
       ws.onmessage = function (e) {
-        console.log(JSON.parse(e.data));
-        const { event, cards } = JSON.parse(e.data);
-        switch (event) {
+        const data = JSON.parse(e.data);
+        const { type } = data;
+        console.log(type);
+        switch (type) {
           case "init":
+            const { cards } = data;
             const cardsContainer = document.getElementById("cards-container");
             cards.sort(function (a, b) {
               const suitA = suits[a[1]];
@@ -67,6 +69,7 @@
             });
             cards.forEach((card) => {
               const button = document.createElement("button");
+              button.setAttribute("id", card);
               button.value = card;
               button.style.backgroundImage = `url(https://www.deckofcardsapi.com/static/img/${card}.png)`;
               button.style.backgroundSize = "cover";
@@ -78,7 +81,7 @@
               button.addEventListener("click", function (e) {
                 console.log(e.target.value);
                 alert(`The card ${e.target.value} was clicked`);
-                button.remove();
+                // button.remove();
                 ws.send(
                   JSON.stringify({
                     player_card: e.target.value,
@@ -90,7 +93,17 @@
 
             break;
 
+          case "error":
+            window.alert(data.error);
+            break;
+
           case "play":
+            if (data.player === playerName) {
+              console.log("same_player", data.cardPlayed);
+              document.getElementById(data.cardPlayed).remove();
+            } else {
+            }
+            console.log(data);
             break;
         }
       };
