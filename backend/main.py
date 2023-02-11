@@ -1,6 +1,5 @@
-from fastapi import FastAPI, Response, HTTPException
-from uuid import uuid4
-from schemas import RoomResponseModel, RoomSchema
+from fastapi import FastAPI, Response, HTTPException, WebSocket
+from uuid import UUID, uuid4
 from room import Room
 
 
@@ -9,7 +8,7 @@ app = FastAPI()
 room = Room()
 
 
-@app.get("/create_room", response_model=RoomResponseModel)
+@app.get("/create_room")
 def create_room():
     room_id = uuid4()
     room.create_room(room_id=room_id)
@@ -17,7 +16,8 @@ def create_room():
 
 
 @app.post("/join_room")
-def join_room(r: RoomSchema):
-    if room.is_room_created(r.room_id):
+def join_room(room_id: UUID):
+    print(room, room_id)
+    if room.is_room_created(room_id):
         return Response(status_code=200)
     raise HTTPException(status_code=404, detail="Room not found")
