@@ -31,16 +31,20 @@ class Deck:
     
 
 class Player:
-    def __init__(self, name, websocket) -> None:
+    def __init__(self, name, websocket, next=None) -> None:
         self.name = name
         self.websocket = websocket
         self.cards = {}
+        self.next = None
+        self.tricks_required = None
 
 class Game:
     deck = Deck.create_deck()
     current_round = {}
-    is_trump_set = None
+    trump_suit = None
     round_start_suit = None
+    last_round_winner = None
+    current_player = None
     
     def __init__(self) -> None:
         pass
@@ -48,18 +52,25 @@ class Game:
     @classmethod
     def shuffle_deck(cls):
         return Deck.shuffle_deck(cls.deck)
-
-    @classmethod  
-    def check_winner(cls):
-        round_winner = None
+  
+    def set_round_winner(self):
         max_score = 0
-        for player in cls.current_round:
-            if cls.deck[cls.current_round[player]]['score'] > max_score:
-                max_score = max(max_score, cls.deck[cls.current_round[player]]['score'])
-                round_winner = player
-            print(player, cls.deck[cls.current_round[player]], cls.current_round[player], max_score)
+        for player in self.current_round:
+            card = self.current_round[player]
+            card_score = self.deck[card]['score']
+            if card[1] == self.round_start_suit:
+                card_score += 50
+            if card[1] == self.trump_suit:
+                card_score += 100
+            if card_score > max_score:
+                max_score = max(max_score, card_score)
+                self.last_round_winner = player
+            # print(player, self.deck[self.current_round[player]], self.current_round[player], max_score)
 
-        return round_winner
+        return self.last_round_winner
+    
+    def set_trump_card(self, card):
+        self.set_trump_card = card
         
 
     

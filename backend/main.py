@@ -20,34 +20,40 @@ class Rooms:
         await websocket.accept()
 
         player = Player(player_name, websocket)
-        # print(player.name) 
-
+        
         if room_code in self.rooms:
-            self.rooms[room_code]['players'].append(player)
+            players = self.rooms[room_code]['players']
+            players.append(player)
 
-            if len(self.rooms[room_code]['players']) == 3:
+            if len(players) == 3:
+                p1, p2, p3 = players
+                p1.tricks_required, p2.tricks_required, p3.tricks_required = [5,3,2]
+                p1.next, p2.next, p3.next = p2, p3, p1
+                print(p1.next.name, p2.next.name, p3.next.name)
+                
                 self.rooms[room_code]['game'] = Game()
-                deck = Deck.shuffle_deck(self.rooms[room_code]['game'].deck)
+                game = self.rooms[room_code]['game']
+                game.current_player = p1
+                deck = Deck.shuffle_deck(game.deck)
 
                 n = len(deck) // 3
                 player_cards = [deck[:n], deck[n:2*n], deck[2*n:]]
-                for player, cards in zip(self.rooms[room_code]['players'], player_cards):
+                for player, cards in zip(players, player_cards):
                     # player.cards.update(card)
                     for card in cards:
-                        print(card)
                         if card[1] in player.cards:
                             player.cards[card[1]].add(card[0])
                         else:
                             player.cards[card[1]] = {card[0]}
 
-                for player in self.rooms[room_code]['players']:
+                for player in players:
                     cards_list = []
                     for suit in player.cards.keys():
                         for rank in player.cards[suit]:
                             cards_list.append(rank + suit)
                     print('cards_list', cards_list)
 
-                    await self.send_cards(cards_list, player.websocket)
+                    await self.select_trump(cards_list[:5], player.websocket)
                     cards_list = []
                     # self.
         else:
@@ -56,13 +62,16 @@ class Rooms:
     def disconnect(self, websocket: WebSocket, room_code:str):
         self.rooms[room_code].remove(websocket)
 
-    async def send_cards(self, cards: List, websocket: WebSocket):
+    async def select_trump(self, cards: List, websocket: WebSocket):
+        
+
         data = {
-            "type": "init",
+            "type": "selectTrump",
             "cards": cards 
         }
         # print(data)
         await websocket.send_text(json.dumps(data))
+        
 
     async def send_personal_message(self, cards: str, websocket: WebSocket):
         await websocket.send_text(cards)
@@ -84,8 +93,47 @@ class Rooms:
             # await player.websocket.send_text({game})
 
     async def already_played(self, websocket, data, room_code, player_name):
-        game = self.rooms[room_code]['game']  
-        if player_name in game.current_round:
+        game = self.rooms[room_code]['game']
+
+
+        if not game.trump_suit:
+            players = self.rooms[room_code]['players']
+
+            for player in players:
+                if player.tricks_required == 5:
+                    break
+
+            if player.name != player_name:
+                event = {
+                        "type": "error",
+                        "error": "It isn't your turn"
+                    }
+                await websocket.send_text(json.dumps(event))
+            else:
+                game.trump_suit = data['player_card'][1]
+                print(game.trump_suit)
+                players = self.rooms[room_code]['players']
+                for player in players:
+                    cards_list = []
+                    for suit in player.cards.keys():
+                        for rank in player.cards[suit]:
+                            cards_list.append(rank + suit)
+
+                    event = {
+                            "type": "start",
+                            "cards": cards_list[5:]
+                        }
+                    await player.websocket.send_text(json.dumps(event))
+            return
+
+
+        if player_name != game.current_player.name:
+            event = {
+                        "type": "error",
+                        "error": "It isn't your turn"
+                    }
+            await websocket.send_text(json.dumps(event))
+        elif player_name in game.current_round:
             print(f'{player_name} has already played')
             event = {
                         "type": "error",
@@ -93,9 +141,20 @@ class Rooms:
                     }
             await websocket.send_text(json.dumps(event))
         else:
+            if game.last_round_winner and len(game.current_round) == 0:
+                if  game.last_round_winner != player_name:
+                    event = {
+                        "type": "error",
+                        "error": "It isn't your turn"
+                    }
+                    await websocket.send_text(json.dumps(event))
+                    return
+
+
             if len(game.current_round) == 0:
                 game.round_start_suit = data['player_card'][1]
-                print(game.round_start_suit)
+                print('game.round_start_suit',game.round_start_suit)
+
             for player in self.rooms[room_code]['players']:
                 if player.name == player_name:
                     if game.round_start_suit in player.cards and data['player_card'][1] != game.round_start_suit:
@@ -112,11 +171,16 @@ class Rooms:
                         player.cards.pop(data['player_card'][1])
 
                     # print(player.cards)
-            if len(game.current_round) == 3:
-                round_winner = game.check_winner()
-                game.current_round.clear()
-                pass
+            game.current_player = game.current_player.next
             await rooms.broadcast(data, room_code, player_name) 
+            if len(game.current_round) == 3:
+                game_winner = game.set_round_winner()
+
+                while True:
+                    if game_winner == game.current_player.name:
+                        break
+                    game.current_player = game.current_player.next
+                game.current_round.clear()
 
 
         
