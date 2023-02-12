@@ -1,0 +1,194 @@
+<!-- <!DOCTYPE html>
+<html>
+  <head>
+    <title>Chat</title>
+    <style></style>
+  </head>
+  <body>
+    <div id="cards-container"></div>
+    <script>
+      var playerName = "player1";
+      var roomID = "test";
+      const URL = `ws://localhost:8000/ws?player_name=${playerName}&room_id=${roomID}`;
+      console.log(URL);
+      var ws = new WebSocket(URL);
+      ws.onmessage = function (e) {
+        console.log(e);
+      };
+
+      //   function sendMessage(event) {
+      //     var input = document.getElementById("messageText");
+      //     ws.send(input.value);
+      //     input.value = "";
+      //     event.preventDefault();
+      //   }
+    </script>
+  </body>
+</html> -->
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Chat</title>
+    <style>
+      #cards-container {
+        display: flex;
+        /* flex */
+      }
+    </style>
+  </head>
+  <body>
+    <div id="cards-container"></div>
+    <!-- <h1>WebSocket Chat</h1> -->
+    <!-- <h2>Your ID: <span id="ws-id"></span></h2>
+    <form action="" onsubmit="sendMessage(event)">
+      <input type="text" id="messageText" autocomplete="off" />
+      <button>Send</button>
+    </form>
+    <ul id="messages"></ul> -->
+    <script>
+      let cards;
+      const cardsContainer = document.getElementById("cards-container");
+
+      const suits = {
+        C: 1,
+        D: 2,
+        S: 3,
+        H: 4,
+      };
+
+      const ranks = {
+        2: 2,
+        3: 3,
+        4: 4,
+        5: 5,
+        6: 6,
+        7: 7,
+        8: 8,
+        9: 9,
+        0: 10,
+        J: 11,
+        Q: 12,
+        K: 13,
+        A: 14,
+      };
+
+      var playerName = "player1";
+      var roomID = "test";
+      const URL = `ws://localhost:8000/ws?player_name=${playerName}&room_id=${roomID}`;
+      console.log(URL);
+      var ws = new WebSocket(URL);
+      ws.onmessage = function (e) {
+        const data = JSON.parse(e.data);
+        const { type } = data;
+        console.log(type);
+        switch (type) {
+          case "set_trump":
+            cards = data.cards;
+            console.log(cards);
+
+            cards.sort(function (a, b) {
+              const suitA = suits[a[1]];
+              const suitB = suits[b[1]];
+
+              const rankA = ranks[a[0]];
+              const rankB = ranks[b[0]];
+
+              if (suitA === suitB) {
+                return rankA - rankB;
+              }
+              return suitA - suitB;
+            });
+            cards.forEach((card) => {
+              const button = document.createElement("button");
+              button.setAttribute("id", card);
+              button.value = card;
+              button.style.backgroundImage = `url(https://www.deckofcardsapi.com/static/img/${card}.png)`;
+              button.style.backgroundSize = "cover";
+              button.style.width = "200px";
+              button.style.height = "200px";
+              button.style.backgroundSize = "100% 100%";
+              button.style.backgroundPosition = "center";
+              button.style.backgroundRepeat = "no-repeat";
+              button.addEventListener("click", function (e) {
+                console.log(e.target.value);
+                alert(`The card ${e.target.value} was clicked`);
+                // button.remove();
+                ws.send(
+                  JSON.stringify({
+                    played_card: e.target.value,
+                  })
+                );
+              });
+              cardsContainer.appendChild(button);
+            });
+
+            break;
+
+          case "error":
+            window.alert(data.message);
+            break;
+
+          case "start":
+            cards.push(...data.cards);
+            console.log(cards);
+            cards.sort(function (a, b) {
+              const suitA = suits[a[1]];
+              const suitB = suits[b[1]];
+
+              const rankA = ranks[a[0]];
+              const rankB = ranks[b[0]];
+
+              if (suitA === suitB) {
+                return rankA - rankB;
+              }
+              return suitA - suitB;
+            });
+            console.log("here", cards, cards.slice(5));
+            cardsContainer.innerHTML = "";
+            cards.forEach((card) => {
+              if (document.getElementById(data.cardPlayed)) {
+                console.log("her");
+                document.getElementById(data.cardPlayed).remove();
+              }
+              const button = document.createElement("button");
+              button.setAttribute("id", card);
+              button.value = card;
+              button.style.backgroundImage = `url(https://www.deckofcardsapi.com/static/img/${card}.png)`;
+              button.style.backgroundSize = "cover";
+              button.style.width = "200px";
+              button.style.height = "200px";
+              button.style.backgroundSize = "100% 100%";
+              button.style.backgroundPosition = "center";
+              button.style.backgroundRepeat = "no-repeat";
+              button.addEventListener("click", function (e) {
+                console.log(e.target.value);
+                alert(`The card ${e.target.value} was clicked`);
+                // button.remove();
+                ws.send(
+                  JSON.stringify({
+                    player_card: e.target.value,
+                  })
+                );
+              });
+              cardsContainer.appendChild(button);
+            });
+            break;
+
+          case "play":
+            if (data.player_name === playerName) {
+              document.getElementById(data.played_card).remove();
+            }
+            break;
+
+          case "winner":
+            if (data.player !== playerName) {
+              console.log(cards);
+            }
+            console.log(data);
+            break;
+        }
+      };
+    </script>
+  </body>
+</html>

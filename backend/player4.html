@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Chat</title>
+    <style></style>
+  </head>
+  <body>
+    <div id="cards-container"></div>
+    <script>
+      var playerName = "player4";
+      var roomID = "test";
+      const URL = `ws://localhost:8000/ws?player_name=${playerName}&room_id=${roomID}`;
+      console.log(URL);
+      var ws = new WebSocket(URL);
+      ws.onmessage = function (e) {
+        console.log(e);
+      };
+
+      //   function sendMessage(event) {
+      //     var input = document.getElementById("messageText");
+      //     ws.send(input.value);
+      //     input.value = "";
+      //     event.preventDefault();
+      //   }
+    </script>
+  </body>
+</html>
