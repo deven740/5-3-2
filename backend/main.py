@@ -2,9 +2,24 @@ from fastapi import FastAPI, Response, HTTPException, WebSocket, WebSocketDiscon
 from uuid import UUID, uuid4
 from room import Room
 from connection import Connection
+from fastapi.middleware.cors import CORSMiddleware
 import json
 
 app = FastAPI()
+
+app = FastAPI()
+
+origins = [
+    "http://localhost:3000",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 room = Room()
 connection = Connection()
@@ -12,8 +27,7 @@ connection = Connection()
 
 @app.get("/create_room")
 def create_room():
-    # room_id = uuid4()
-    room_id = "test"
+    room_id = uuid4()
     room.create_room(room_id=room_id)
     return {"room_id": room_id}
 
