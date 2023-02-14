@@ -28,7 +28,7 @@ connection = Connection()
 @app.get("/create_room")
 def create_room():
     # room_id = uuid4()
-    room_id = 'test'
+    room_id = "test"
     room.create_room(room_id=room_id)
     return {"room_id": room_id}
 

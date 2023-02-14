@@ -9,12 +9,13 @@ function InputBox() {
   const [roomId, setRoomId] = useState("");
 
   const joinRoom = (e) => {
-    console.log(roomId);
+    return navigate("/play", {
+      state: { roomId: roomId, playerName: playerName },
+    });
   };
 
   const createRoom = async (e) => {
     try {
-      const playerName = "deven";
       const { data } = await axios.get("http://localhost:8000/create_room");
       const roomId = data.room_id;
       window.alert(`Your Room ID is ${roomId}`);

@@ -8,20 +8,48 @@ import useWebSocket, { ReadyState } from "react-use-websocket";
 function Play() {
   const { state } = useLocation();
   const { roomId, playerName } = state;
+  console.log(roomId, playerName);
   const [socketUrl, setSocketUrl] = useState(
     `ws://localhost:8000/ws?player_name=${playerName}&room_id=${roomId}`
   );
-  console.log(state);
+  const [cards, setCards] = useState(null);
   const { sendMessage, lastMessage, readyState } = useWebSocket(socketUrl);
+
+  const connectionStatus = {
+    [ReadyState.CONNECTING]: "Connecting",
+    [ReadyState.OPEN]: "Open",
+    [ReadyState.CLOSING]: "Closing",
+    [ReadyState.CLOSED]: "Closed",
+    [ReadyState.UNINSTANTIATED]: "Uninstantiated",
+  }[readyState];
+
+  useEffect(() => {
+    if (lastMessage !== null) {
+      // console.log(lastMessage.data, typeof lastMessage);
+      const payLoad = JSON.parse(lastMessage.data);
+      const { type } = payLoad;
+
+      switch (type) {
+        case "set_trump":
+          const { cards } = payLoad;
+          console.log(cards);
+          setCards(cards);
+      }
+
+      // const { data } = JSON.parse(lastMessage);
+      // console.log(data);
+    }
+  }, [lastMessage]);
 
   return (
     <div className="play">
       <div className="table">
+        <span>The WebSocket is currently {connectionStatus}</span>
         <Players />
         <Self />
       </div>
       <div className="player-cards">
-        <Cards />
+        {cards ? <Cards cards={cards} /> : null}
       </div>
     </div>
   );
