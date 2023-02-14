@@ -14,10 +14,13 @@ function InputBox() {
 
   const createRoom = async (e) => {
     try {
+      const playerName = "deven";
       const { data } = await axios.get("http://localhost:8000/create_room");
-      const roomID = data.room_id;
-      window.alert(`Your Room ID is ${roomID}`);
-      return navigate("/play");
+      const roomId = data.room_id;
+      window.alert(`Your Room ID is ${roomId}`);
+      return navigate("/play", {
+        state: { roomId: roomId, playerName: playerName },
+      });
     } catch (err) {
       console.log(err);
     }
